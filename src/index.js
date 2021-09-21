@@ -1,9 +1,7 @@
-
 const { c } = require("./c");
 const { dynamicLoad } = require("./dynamicLoad");
 
 console.log("index");
-
 
 console.log("index: C", c);
 // require.ensure([], require => {
@@ -13,17 +11,17 @@ console.log("index: C", c);
 // });
 
 dynamicLoad(DYNAMIC_LOAD_DIRNAME, "./x").then((x) => {
-  console.log("index: X (2)", x);
+    console.log("index: X (2)", x);
 });
 
 dynamicLoad(DYNAMIC_LOAD_DIRNAME, "./y").then((y) => {
-  console.log("index: Y (2)", y);
+    console.log("index: Y (2)", y);
 });
 
-require.ensure(["./z"], function(require) {
-   const z = require("./z");
+require.ensure(["./z"], function (require) {
+    const z = require("./z");
 
-   console.log("index: Z", z);
+    console.log("index: Z", z);
 });
 
 // require.ensure([], require => {
