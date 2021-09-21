@@ -1,0 +1,16 @@
+{
+  "name": "webpack4-dynload",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "bundle": "webpack"
+  },
+  "devDependencies": {
+    "lodash": "^4.17.21",
+    "html-webpack-plugin": "^4",
+    "webpack-manifest-plugin": "^4.0.2",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^4.8.0"
+  }
+}
