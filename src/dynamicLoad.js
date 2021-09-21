@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("path-browserify");
 
 const globalWebpackRequire = __webpack_require__;
 
@@ -17,7 +17,7 @@ Array.from(document.querySelectorAll("script"))
         chunkPromises[uri] = Promise.resolve();
     });
 
-async function loadJavascript(uri) {
+async function loadJavaScriptChunk(uri) {
     return new Promise((resolve, reject) => {
         // console.log("loading", uri);
         const element = document.createElement("script");
@@ -34,7 +34,7 @@ async function loadJavascript(uri) {
             // console.log("error", uri, error);
             element.onload = null;
             element.onerror = null;
-            reject(new Error(`dynamicLoad: failed to load ${uri}: ${error}`));
+            reject(new Error(`dynamicLoad '${uri}': failed to load chunk: ${error}`));
         };
         document.body.appendChild(element);
     });
@@ -44,7 +44,7 @@ async function ensureJavascriptLoaded(uri) {
     let promise = chunkPromises[uri];
 
     if (!promise) {
-        chunkPromises[uri] = promise = loadJavascript(uri);
+        chunkPromises[uri] = promise = loadJavaScriptChunk(uri);
     }
     return promise;
 }
@@ -56,17 +56,18 @@ async function ensureJavascriptLoaded(uri) {
  *
  * Requires `window.dynamicLoadMeta` created by `DynamicLoadMetaPlugin`.
  *
- * @param {*} baseUri should be DYNAMIC_LOAD_DIRNAME
- * @param {*} module src-dir relative module name (like in CommonJS), no support for `node_modules` yet
- * @returns Promise resolving to `module.exports` of requested module, when loaded
+ * @param {string} baseUri should be DYNAMIC_LOAD_DIRNAME
+ * @param {string} module src-dir relative module name (like in CommonJS), no support for `node_modules` yet
+ * @returns Promise<unknown> resolving to `module.exports` of requested module, when loaded
  */
 export async function dynamicLoad(baseUri, module) {
     const jsName = module.endsWith(".js") ? module : module + ".js";
-    const fulljsName = `.` + path.resolve(baseUri, jsName);
+    const fulljsName = "./" + path.join(baseUri, jsName);
     const moduleMeta = window.dynamicLoadMeta[fulljsName];
 
+    // console.log("dynamicLoad", module, fulljsName, moduleMeta);
     if (!moduleMeta) {
-        throw new Error(`dynamicLoad ${fulljsName} no meta for this module`);
+        throw new Error(`dynamicLoad '${fulljsName}': no meta for this module`);
     }
     const [moduleId, ...deps] = moduleMeta;
     const moduleDeps = deps.map((dep) => new URL(dep, window.location.href).href);
