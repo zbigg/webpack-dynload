@@ -3,12 +3,7 @@ const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { DynamicLoadMetaPlugin } = require("./DynamicLoadMetaPlugin");
 
-const htmlWebpackPluginOptions = {
-    template: "./index.html",
-    // inject: false,
-    placeHolder: {},
-    chunks: ["index"]
-};
+const dynamicLoadMetaPluginResultPlaceHolder = {};
 
 module.exports = {
     devtool: false,
@@ -20,23 +15,28 @@ module.exports = {
         y: "./src/y.js"
     },
     output: {
-        filename: "js/[name]-[contenthash].js",
-        // filename: "[name].js",
+        // filename: "js/[name]-[contenthash].js",
+        filename: "[name].js",
         path: __dirname + "/dist"
     },
     optimization: {
         splitChunks: {
-            chunks: "all",
-            minSize: 0
+            chunks: "all"
+            //     // minSize: 0
         },
         runtimeChunk: "single"
     },
 
     plugins: [
         new DynamicLoadMetaPlugin({
-            placeHolder: htmlWebpackPluginOptions.placeHolder
+            placeHolder: dynamicLoadMetaPluginResultPlaceHolder
         }),
-        new HtmlWebpackPlugin(htmlWebpackPluginOptions),
+        new HtmlWebpackPlugin({
+            template: "./index.html",
+            placeHolder: dynamicLoadMetaPluginResultPlaceHolder,
+            chunks: ["index"],
+            inlineSource: ".(js|css)$"
+        }),
         new WebpackManifestPlugin()
     ]
 };

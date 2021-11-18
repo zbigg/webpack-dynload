@@ -1,5 +1,6 @@
 const path = require("path");
 const { DefinePlugin } = require("webpack");
+// const util = require("util");
 
 function moduleDependenciesDeep(chunk) {
     let resultModules = new Set();
@@ -36,21 +37,39 @@ class DynamicLoadMetaPlugin {
                 return `'${path.dirname(v.module.rawRequest)}'`;
             }, [])
         });
-        compiler.apply(definePlugin);
-        compiler.plugin("compilation", (compilation) => {
-            compilation.plugin("after-optimize-chunk-assets", (chunks) => {
+        // compiler.apply(definePlugin);
+        definePlugin.apply(compiler);
+        compiler.hooks.compilation.tap("DynamicLoadMetaPlugin", (compilation) => {
+            compilation.hooks.afterOptimizeChunkAssets.tap("DynamicLoadMetaPlugin", (chunks) => {
+                // console.log("X", util.inspect(chunks));
                 const moduleLocalPath = (module) => {
                     // console.log("moduleLocalPath", module.id, this.root, module.userRequest);
                     return module.userRequest
                         ? [module.id, `./` + path.relative(this.root, module.userRequest)]
                         : [null, null];
                 };
-                // for(const chunk of chunks) {
-                //     if (chunk.id === 'x')
-                //      console.log("X chunk", util.inspect(chunk._modules));
-                // }
 
-                const deps = chunks
+                const deps = Array.from(chunks)
+                    .map((chunk) => {
+                        // console.log("X chunk", util.inspect(chunk));
+                        if (!chunk._modules) {
+                            // shim webpack4-like chunk
+                            const _modules = Array.from(chunk._groups).map(
+                                (g) => Array.from(g._modulePreOrderIndices.keys())[0]
+                            );
+                            // console.log("X chunk _modules",
+                            //     util.inspect(_modules)
+                            // );
+                            return {
+                                files: Array.from(chunk.files),
+                                _modules
+                            };
+                        } else {
+                            // webpack4-like chunk
+                            return chunk;
+                        }
+                    })
+                    .filter((chunk) => chunk._modules)
                     .map((chunk) => ({
                         uri: `./${chunk.files[0]}`,
                         // name: chunk.name,
